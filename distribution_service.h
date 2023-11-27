@@ -6,12 +6,11 @@
 /**
  * @brief Definition of callback function called on incoming update
  */
-typedef void (*distribution_service_callback_t)(
-    uint32_t data_id,
-    void *data,
-    mira_size_t size,
-    const mira_net_udp_callback_metadata_t *metadata,
-    void *storage);
+typedef void (*distribution_service_callback_t)(uint32_t data_id,
+                                                void* data,
+                                                mira_size_t size,
+                                                const mira_net_udp_callback_metadata_t* metadata,
+                                                void* storage);
 
 /**
  * @brief Register a new data set to distribute over the network
@@ -27,13 +26,12 @@ typedef void (*distribution_service_callback_t)(
  * @return Status of the operation
  * @retval 0 on success, -1 on failure
  */
-int distribution_service_register(
-    uint32_t data_id,
-    void *data,
-    mira_size_t size,
-    uint8_t rate,
-    distribution_service_callback_t update_handler,
-    void *storage);
+int distribution_service_register(uint32_t data_id,
+                                  void* data,
+                                  mira_size_t size,
+                                  uint8_t rate,
+                                  distribution_service_callback_t update_handler,
+                                  void* storage);
 
 /**
  * @brief Update the distributed data with new content
@@ -45,10 +43,7 @@ int distribution_service_register(
  * @return Status of the operation
  * @retval 0 on success, -1 on failure
  */
-int distribution_service_update(
-    uint32_t data_id,
-    void *data,
-    mira_size_t size);
+int distribution_service_update(uint32_t data_id, void* data, mira_size_t size);
 
 /**
  * @brief Pause a running distribution, preventing sending and receiving updates
@@ -58,8 +53,7 @@ int distribution_service_update(
  * @return Status of the operation
  * @retval 0 on success, -1 on failure
  */
-int distribution_service_pause(
-    uint32_t data_id);
+int distribution_service_pause(uint32_t data_id);
 
 /**
  * @brief Resume a paused distribution, preventing sending and receiving updates
@@ -69,7 +63,6 @@ int distribution_service_pause(
  * @return Status of the operation
  * @retval 0 on success, -1 on failure
  */
-int distribution_service_resume(
-    uint32_t data_id);
+int distribution_service_resume(uint32_t data_id);
 
 #endif

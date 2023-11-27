@@ -21,6 +21,7 @@ This example is provided as is, without warranty.
  * Identifies as a node.
  * Sends data to the root.
  */
+/* clang-format off */
 static const mira_net_config_t net_config = {
     .pan_id = 0x6cf9eb32,
     .key = {
@@ -34,48 +35,43 @@ static const mira_net_config_t net_config = {
     .antenna = 0,
     .prefix = NULL /* default prefix */
 };
+/* clang-format on */
 
-MIRA_IODEFS(
-    MIRA_IODEF_NONE,    /* fd 0: stdin */
-    MIRA_IODEF_UART(0), /* fd 1: stdout */
-    MIRA_IODEF_NONE     /* fd 2: stderr */
-    /* More file descriptors can be added, for use with dprintf(); */
+MIRA_IODEFS(MIRA_IODEF_NONE,    /* fd 0: stdin */
+            MIRA_IODEF_UART(0), /* fd 1: stdout */
+            MIRA_IODEF_NONE     /* fd 2: stderr */
+                                /* More file descriptors can be added, for use with dprintf(); */
 );
 
-static void udp_listen_callback(
-    mira_net_udp_connection_t *connection,
-    const void *data,
-    uint16_t data_len,
-    const mira_net_udp_callback_metadata_t *metadata,
-    void *storage)
+static void udp_listen_callback(mira_net_udp_connection_t* connection,
+                                const void* data,
+                                uint16_t data_len,
+                                const mira_net_udp_callback_metadata_t* metadata,
+                                void* storage)
 {
     char buffer[MIRA_NET_MAX_ADDRESS_STR_LEN];
     uint16_t i;
 
     printf("Received message from [%s]:%u: ",
-        mira_net_toolkit_format_address(buffer, metadata->source_address),
-        metadata->source_port);
+           mira_net_toolkit_format_address(buffer, metadata->source_address),
+           metadata->source_port);
     for (i = 0; i < data_len - 1; i++) {
-        printf("%c", ((char *) data)[i]);
+        printf("%c", ((char*)data)[i]);
     }
     printf("\n");
 }
 
 PROCESS(main_proc, "Main process");
 
-int distribution_init(
-    void);
+int distribution_init(void);
 static uint32_t global_state;
 
-void mira_setup(
-    void)
+void mira_setup(void)
 {
     mira_status_t uart_ret;
-    mira_uart_config_t uart_config = {
-        .baudrate = 115200,
-        .tx_pin = MIRA_GPIO_PIN(0, 6),
-        .rx_pin = MIRA_GPIO_PIN(0, 8)
-    };
+    mira_uart_config_t uart_config = { .baudrate = 115200,
+                                       .tx_pin = MIRA_GPIO_PIN(0, 6),
+                                       .rx_pin = MIRA_GPIO_PIN(0, 8) };
 
     MIRA_MEM_SET_BUFFER(12288);
 
@@ -92,12 +88,12 @@ PROCESS_THREAD(main_proc, ev, data)
 {
     static struct etimer timer;
 
-    static mira_net_udp_connection_t *udp_connection;
+    static mira_net_udp_connection_t* udp_connection;
 
     static mira_net_address_t net_address;
     static char buffer[MIRA_NET_MAX_ADDRESS_STR_LEN];
     static mira_status_t res;
-    static const char *message = "Hello Network";
+    static const char* message = "Hello Network";
 
     PROCESS_BEGIN();
     /* Pause once, so we don't run anything before finish of startup */
@@ -109,7 +105,8 @@ PROCESS_THREAD(main_proc, ev, data)
     mira_status_t result = mira_net_init(&net_config);
     if (result) {
         printf("FAILURE: mira_net_init returned %d\n", result);
-        while (1);
+        while (1)
+            ;
     }
 
     /* Initialize the distribution service after the network is started */
@@ -129,13 +126,11 @@ PROCESS_THREAD(main_proc, ev, data)
         mira_net_state_t net_state = mira_net_get_state();
 
         if (net_state != MIRA_NET_STATE_JOINED) {
-            printf(
-                "Waiting for network (state is %s)\n",
-                net_state == MIRA_NET_STATE_NOT_ASSOCIATED ? "not associated"
-                : net_state == MIRA_NET_STATE_ASSOCIATED ? "associated"
-                : net_state == MIRA_NET_STATE_JOINED ? "joined"
-                : "UNKNOWN"
-            );
+            printf("Waiting for network (state is %s)\n",
+                   net_state == MIRA_NET_STATE_NOT_ASSOCIATED ? "not associated"
+                   : net_state == MIRA_NET_STATE_ASSOCIATED   ? "associated"
+                   : net_state == MIRA_NET_STATE_JOINED       ? "joined"
+                                                              : "UNKNOWN");
             etimer_set(&timer, CHECK_NET_INTERVAL * CLOCK_SECOND);
         } else {
             /* Try to retrieve the root address. */
@@ -150,9 +145,9 @@ PROCESS_THREAD(main_proc, ev, data)
                  * root node on the given UDP Port.
                  */
                 printf("Sending to address: %s\n",
-                    mira_net_toolkit_format_address(buffer, &net_address));
-                mira_net_udp_send_to(udp_connection, &net_address, UDP_PORT,
-                    message, strlen(message));
+                       mira_net_toolkit_format_address(buffer, &net_address));
+                mira_net_udp_send_to(
+                  udp_connection, &net_address, UDP_PORT, message, strlen(message));
                 etimer_set(&timer, SEND_INTERVAL * CLOCK_SECOND);
             }
         }
@@ -164,30 +159,26 @@ PROCESS_THREAD(main_proc, ev, data)
     PROCESS_END();
 }
 
-void global_state_update_cb(
-    uint32_t data_id,
-    void *data,
-    mira_size_t size,
-    const mira_net_udp_callback_metadata_t *metadata,
-    void *storage)
+void global_state_update_cb(uint32_t data_id,
+                            void* data,
+                            mira_size_t size,
+                            const mira_net_udp_callback_metadata_t* metadata,
+                            void* storage)
 {
     memcpy(&global_state, data, size);
     printf("New state received, %ld, [ID: 0x%08lx]\n", global_state, data_id);
-
 }
 
 int distribution_init()
 {
     mira_status_t status;
 
-    status = distribution_service_register(
-        DISTRIBUTION_ID_STATE,
-        &global_state, /* state message */
-        sizeof(global_state), /* size */
-        0, /* rate */
-        global_state_update_cb,
-        NULL);
+    status = distribution_service_register(DISTRIBUTION_ID_STATE,
+                                           &global_state,        /* state message */
+                                           sizeof(global_state), /* size */
+                                           0,                    /* rate */
+                                           global_state_update_cb,
+                                           NULL);
 
     return status;
-
 }
