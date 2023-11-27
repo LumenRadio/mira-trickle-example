@@ -1,6 +1,6 @@
 PROJECT_NAME = trickle_root
 
-TARGET ?= nrf52840-os
+TARGET ?= nrf52840ble-os
 LIBDIR ?= $(CURDIR)/../../../..
 
 SOURCE_FILES = \
